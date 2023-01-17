@@ -127,3 +127,9 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Personal gitignore
+cengine_model
+lowlevel_cengine_model
+ex.py
+chess_train.csv

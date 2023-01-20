@@ -26,11 +26,11 @@ def predict_pos(fen_s, model):
 def main():
 
     board = chess.Board()
-    model = keras.models.load_model("lowlevel_cengine_model")
+    model = keras.models.load_model(sys.argv[1])
     topevals_lf = [[0 for j in range (2)] for i in range(4)]
     white_b = 1
 
-    while(True):
+    while (True):
 
         print(board)
         print("Top Moves: ", end = '')
@@ -64,7 +64,7 @@ def main():
                     for j in range(3):
                         if topevals_lf[j][0] > topevals_lf[pos_i][0]:
                             pos_i = j
-                    if eval_f > topevals_lf[pos_i][0]:
+                    if eval_f < topevals_lf[pos_i][0]:
                         topevals_lf[pos_i][0] = eval_f
                         topevals_lf[pos_i][1] = i
 
@@ -80,4 +80,5 @@ def main():
         white_b = 0 if white_b == 1 else 1
 
 
-main()
+if __name__ == "__main__":
+    main()

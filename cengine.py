@@ -6,6 +6,8 @@ from tensorflow import keras
 import numpy as np
 import matplotlib.pyplot as plt
 
+import sys
+
 """
 Return int array of board numbers
 """
@@ -56,7 +58,7 @@ def gen_board(fen_s):
 def make_new(file_file, inputs_2di, outputs_2di):
 
     model = keras.Sequential([
-    keras.layers.Dense(1024, activation='relu', input_shape=(65)),
+    keras.layers.Dense(1024, activation='relu', input_shape=[65]),
     keras.layers.Dense(256, activation='relu'),
     keras.layers.Dense(256, activation='relu'),
     keras.layers.Dense(64, activation='relu'),
@@ -65,7 +67,7 @@ def make_new(file_file, inputs_2di, outputs_2di):
     keras.layers.Dense(1, activation='linear')
     ])
     model.compile(optimizer='adam', loss='mean_squared_error')
-    model.fit(inputs_2di, outputs_2di, epochs=100) 
+    model.fit(inputs_2di, outputs_2di, epochs=1000) 
 
     model.save(file_file)
 
@@ -75,7 +77,7 @@ def make_new(file_file, inputs_2di, outputs_2di):
 def train_ex(file_file, inputs_2di, outputs_2di):
 
     model = keras.models.load_model(file_file)
-    model.fit(inputs_2di, outputs_2di, epochs=100) 
+    model.fit(inputs_2di, outputs_2di, epochs=50) 
     model.save(file_file)
 
 """
@@ -83,9 +85,11 @@ def train_ex(file_file, inputs_2di, outputs_2di):
 
 def main():
 
-    ninputs_i = 65; nex_i = 1000000
+    nex_i = 1000000
     inputs_2di = [[0 for j in range(65)] for i in range(nex_i)]
     outputs_2di = [[0 for j in range(1)] for i in range(nex_i)]
+
+    model = keras.models.load_model(sys.argv[1])
 
     with open("chess_train.csv") as data_file:
         next(data_file)
@@ -102,16 +106,24 @@ def main():
             outputs_2di[ex_i] = min(max(eval_f, -15), 15)
             inputs_2di[ex_i] = gen_board(fen_s); inputs_2di[ex_i][64] = -1 if m_c == "b" else 1
 
+            if (False):
+                test = [[0 for j in range(65)] for i in range(1)]
+                test[0] = inputs_2di[ex_i]
+                print("Predicted: ", model.predict(test, verbose = 0))
+                print("Actual: ", outputs_2di[ex_i])
+
             ex_i += 1; 
             if ex_i == nex_i: break
 
-        #train_ex("cengine_model", inputs_2di, outputs_2di) # 1,000,000 examples
-        #train_ex("lowlevel_cengine_model", inputs_2di, outputs_2di) # 100,000 examples
-        make_new("cengine_model",  inputs_2di, outputs_2di)
+    #train_ex("cengine_model", inputs_2di, outputs_2di) # 1,000,000 examples
+    #train_ex("lowlevel_cengine_model", inputs_2di, outputs_2di) # 100,000 examples
+    #train_ex("pathetic_cengine_model", inputs_2di, outputs_2di) # 10,000 examples
+    #make_new("pathetic_cengine_model",  inputs_2di, outputs_2di)
 
     return
 
-main()
+if __name__ == "__main__":
+    main()
         
 
 

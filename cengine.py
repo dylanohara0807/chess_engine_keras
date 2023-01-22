@@ -2,10 +2,6 @@
 import tensorflow as tf
 from tensorflow import keras
 
-# Helper libraries
-import numpy as np
-import matplotlib.pyplot as plt
-
 import sys
 
 """
@@ -15,8 +11,9 @@ Return int array of board numbers
 def gen_board(fen_s):
 
     list_ls = fen_s.split("/")
-    board_li = [0 for i in range(65)] 
+    board_li = [0 for i in range(66)] 
 
+    material_i = 0
     for i in range(8):
 
         column_i = 0; spot_i = 0
@@ -38,18 +35,24 @@ def gen_board(fen_s):
                 coef_i = -1 if v_c.islower() else 1
                 if v_c == "Q" or v_c == "q":
                     board_li[i * 8 + column_i] = .9 * coef_i
+                    material_i += 9 * coef_i
                 elif v_c == "R" or v_c == "r":
                     board_li[i * 8 + column_i] = .5 * coef_i
+                    material_i += 5 * coef_i
                 elif v_c == "B" or v_c == "b":
                     board_li[i * 8 + column_i] = .3 * coef_i
+                    material_i += 3 * coef_i
                 elif v_c == "N" or v_c == "n":
                     board_li[i * 8 + column_i] = .3 * coef_i
+                    material_i += 3 * coef_i
                 elif v_c == "P" or v_c == "p":
                     board_li[i * 8 + column_i] = .1 * coef_i
+                    material_i += 1 * coef_i
                 else:
                     board_li[i * 8 + column_i] = 1 * coef_i
                 column_i += 1; spot_i += 1
-            
+    
+    board_li[65] = material_i
     return board_li
 
 """
@@ -58,16 +61,18 @@ def gen_board(fen_s):
 def make_new(file_file, inputs_2di, outputs_2di):
 
     model = keras.Sequential([
-    keras.layers.Dense(1024, activation='relu', input_shape=[65]),
+    keras.layers.Dense(1024, activation='relu', input_shape=[66]),
+    keras.layers.Dense(1024, activation='relu'),
+    keras.layers.Dense(512, activation='relu'),
+    keras.layers.Dense(512, activation='relu'),
     keras.layers.Dense(256, activation='relu'),
     keras.layers.Dense(256, activation='relu'),
-    keras.layers.Dense(64, activation='relu'),
     keras.layers.Dense(64, activation='relu'),
     keras.layers.Dense(64, activation='relu'),
     keras.layers.Dense(1, activation='linear')
     ])
     model.compile(optimizer='adam', loss='mean_squared_error')
-    model.fit(inputs_2di, outputs_2di, epochs=1000) 
+    model.fit(inputs_2di, outputs_2di, epochs=1000, batch_size=5000) 
 
     model.save(file_file)
 
@@ -86,10 +91,10 @@ def train_ex(file_file, inputs_2di, outputs_2di):
 def main():
 
     nex_i = 1000000
-    inputs_2di = [[0 for j in range(65)] for i in range(nex_i)]
+    inputs_2di = [[0 for j in range(66)] for i in range(nex_i)]
     outputs_2di = [[0 for j in range(1)] for i in range(nex_i)]
 
-    model = keras.models.load_model(sys.argv[1])
+    #model = keras.models.load_model(sys.argv[1])
 
     with open("chess_train.csv") as data_file:
         next(data_file)
@@ -104,7 +109,7 @@ def main():
                 eval_f = 1500 * (float) (line_s[line_s.index(",") + 2 : ])
             eval_f /= 100
             outputs_2di[ex_i] = min(max(eval_f, -15), 15)
-            inputs_2di[ex_i] = gen_board(fen_s); inputs_2di[ex_i][64] = -1 if m_c == "b" else 1
+            inputs_2di[ex_i] = gen_board(fen_s); inputs_2di[ex_i][64] = -10 if m_c == "b" else 10
 
             if (False):
                 test = [[0 for j in range(65)] for i in range(1)]
@@ -118,7 +123,7 @@ def main():
     #train_ex("cengine_model", inputs_2di, outputs_2di) # 1,000,000 examples
     #train_ex("lowlevel_cengine_model", inputs_2di, outputs_2di) # 100,000 examples
     #train_ex("pathetic_cengine_model", inputs_2di, outputs_2di) # 10,000 examples
-    #make_new("pathetic_cengine_model",  inputs_2di, outputs_2di)
+    make_new("cengine_model",  inputs_2di, outputs_2di)
 
     return
 

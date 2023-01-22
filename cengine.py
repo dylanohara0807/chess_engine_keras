@@ -4,11 +4,18 @@ from tensorflow import keras
 
 import sys
 
-"""
-Return int array of board numbers
-"""
-
 def gen_board(fen_s):
+    """ 
+    Generate a chess board in the form of a float array, given a fen
+    representation of the board.
+
+    Args:
+        fen_s (str): fen format chess state (rnbqkbnr/pppppppp/8/8/4P3/8/PPPP1PPP/RNBQKBNR).
+
+    Returns:
+        float[66]: array of each chess piece value(/10) at each given position (0 if no piece, 1 if king).
+        Two extra extra spots, one for side to move, and one for total material balance (not /10).
+    """        
 
     list_ls = fen_s.split("/")
     board_li = [0 for i in range(66)] 
@@ -55,10 +62,15 @@ def gen_board(fen_s):
     board_li[65] = material_i
     return board_li
 
-"""
-"""
-
 def make_new(file_file, inputs_2di, outputs_2di):
+    """ 
+    Create a train a new chess_engine, save it to directory file_file.
+
+    Args:
+        file_file (str): File name to save traind model to.
+        inputs_2di (float[][66]): 2D array of the inputs.
+        outputs_2di (float[][1]): 2D array of outputs (one output value).
+    """    
 
     model = keras.Sequential([
     keras.layers.Dense(1024, activation='relu', input_shape=[66]),
@@ -76,19 +88,27 @@ def make_new(file_file, inputs_2di, outputs_2di):
 
     model.save(file_file)
 
-"""
-"""
-
 def train_ex(file_file, inputs_2di, outputs_2di):
+    """ 
+    Train an already existing model, given by file_file (overrides existing model).
+
+    Args:
+        file_file (str): File name to train, and resave.
+        inputs_2di (float[][66]): 2D array of the inputs.
+        outputs_2di (float[][1]): 2D array of outputs (one output value).
+    """     
 
     model = keras.models.load_model(file_file)
     model.fit(inputs_2di, outputs_2di, epochs=50) 
     model.save(file_file)
 
-"""
-"""
-
 def main():
+    """ 
+    Parse FEN and eval data from chess_train.csv using hardcoded length.
+    Clip evaluations to [-15, 15] which is sufficient for human understanding of evaluation.
+    Either train or create a new model, based on hardcoded input.
+
+    """    
 
     nex_i = 1000000
     inputs_2di = [[0 for j in range(66)] for i in range(nex_i)]

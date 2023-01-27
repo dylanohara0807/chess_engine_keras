@@ -84,7 +84,7 @@ def make_new(file_file, inputs_2di, outputs_2di):
     keras.layers.Dense(1, activation='linear')
     ])
     model.compile(optimizer='adam', loss='mean_squared_error')
-    model.fit(inputs_2di, outputs_2di, epochs=1000, batch_size=5000) 
+    model.fit(inputs_2di, outputs_2di, epochs=1000, batch_size=500) 
 
     model.save(file_file)
 
@@ -140,10 +140,10 @@ def main():
             ex_i += 1; 
             if ex_i == nex_i: break
 
-    #train_ex("cengine_model", inputs_2di, outputs_2di) # 1,000,000 examples
+    train_ex("cengine_model", inputs_2di, outputs_2di) # 1,000,000 examples
     #train_ex("lowlevel_cengine_model", inputs_2di, outputs_2di) # 100,000 examples
     #train_ex("pathetic_cengine_model", inputs_2di, outputs_2di) # 10,000 examples
-    make_new("cengine_model",  inputs_2di, outputs_2di)
+    #make_new("cengine_model",  inputs_2di, outputs_2di)
 
     return
 

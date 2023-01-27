@@ -130,6 +130,7 @@ dmypy.json
 
 # Personal gitignore
 cengine_model
+data
 lowlevel_cengine_model
 pathetic_cengine_model
 ex.py

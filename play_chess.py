@@ -11,7 +11,7 @@ from tensorflow import keras
 
 def predict_pos(fen_s, model):
 
-    board_li = [[0 for j in range(65)] for i in range(1)]
+    board_li = [[0 for j in range(66)] for i in range(1)]
     m_c = fen_s[fen_s.index(" ") + 1 : fen_s.index(" ") + 2]
     fen_s = fen_s[0 : fen_s.index(" ")]
     board_li[0] = cengine.gen_board(fen_s)

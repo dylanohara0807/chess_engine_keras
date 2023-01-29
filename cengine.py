@@ -1,6 +1,8 @@
 # Tensorflow
 import tensorflow as tf
 from tensorflow import keras
+from matplotlib import pyplot as plt
+import numpy as np
 
 import sys
 
@@ -73,24 +75,27 @@ def make_new(file_file, inputs_2di, outputs_2di):
     """    
 
     model = keras.Sequential([
-    keras.layers.Dense(1024, activation='relu', input_shape=[66]),
+    keras.layers.Dense(4096, activation='relu', input_shape=[66]),
     keras.layers.Dense(1024, activation='relu'),
-    keras.layers.Dense(512, activation='relu'),
-    keras.layers.Dense(512, activation='relu'),
     keras.layers.Dense(256, activation='relu'),
     keras.layers.Dense(256, activation='relu'),
-    keras.layers.Dense(64, activation='relu'),
+    keras.layers.Dense(256, activation='relu'),
+    keras.layers.Dense(256, activation='relu'),
+    keras.layers.Dense(256, activation='relu'),
+    keras.layers.Dense(256, activation='relu'),
+    keras.layers.Dense(256, activation='relu'),
     keras.layers.Dense(64, activation='relu'),
     keras.layers.Dense(1, activation='linear')
     ])
     model.compile(optimizer='adam', loss='mean_squared_error')
-    model.fit(inputs_2di, outputs_2di, epochs=1000, batch_size=500) 
+    model.fit(inputs_2di, outputs_2di, epochs=10, batch_size=5000) 
 
-    model.save(file_file)
+    model.save("model_data/" + file_file)
 
 def train_ex(file_file, inputs_2di, outputs_2di):
     """ 
-    Train an already existing model, given by file_file (overrides existing model).
+    Train an already existing model, given by file_file (overrides existing model). 
+    Then save the model and a plot of training/validation accurazy over time.
 
     Args:
         file_file (str): File name to train, and resave.
@@ -98,9 +103,19 @@ def train_ex(file_file, inputs_2di, outputs_2di):
         outputs_2di (float[][1]): 2D array of outputs (one output value).
     """     
 
-    model = keras.models.load_model(file_file)
-    model.fit(inputs_2di, outputs_2di, epochs=50) 
-    model.save(file_file)
+    model = keras.models.load_model("model_data/" + file_file)
+    history =  model.fit(inputs_2di, outputs_2di, epochs=50, batch_size = 10000, validation_split = .1) 
+
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'val'], loc='upper left')
+    plt.savefig("accuracy_graphs/" + file_file)
+    plt.show()
+
+    model.save("model_data/" + file_file)
 
 def main():
     """ 
@@ -116,7 +131,7 @@ def main():
 
     #model = keras.models.load_model(sys.argv[1])
 
-    with open("chess_train.csv") as data_file:
+    with open("training_data/chess_train.csv") as data_file:
         next(data_file)
         ex_i = 0
         for line_s in data_file:
@@ -129,7 +144,7 @@ def main():
                 eval_f = 1500 * (float) (line_s[line_s.index(",") + 2 : ])
             eval_f /= 100
             outputs_2di[ex_i] = min(max(eval_f, -15), 15)
-            inputs_2di[ex_i] = gen_board(fen_s); inputs_2di[ex_i][64] = -10 if m_c == "b" else 10
+            inputs_2di[ex_i] = gen_board(fen_s); inputs_2di[ex_i][64] = -1 if m_c == "b" else 1
 
             if (False):
                 test = [[0 for j in range(65)] for i in range(1)]
@@ -139,11 +154,15 @@ def main():
 
             ex_i += 1; 
             if ex_i == nex_i: break
+    
+    inputs_2di = np.array(inputs_2di)
+    outputs_2di = np.array(outputs_2di)
 
-    train_ex("cengine_model", inputs_2di, outputs_2di) # 1,000,000 examples
-    #train_ex("lowlevel_cengine_model", inputs_2di, outputs_2di) # 100,000 examples
-    #train_ex("pathetic_cengine_model", inputs_2di, outputs_2di) # 10,000 examples
-    #make_new("cengine_model",  inputs_2di, outputs_2di)
+    #train_ex("exp_cengine_model", inputs_2di, outputs_2di) # 10,000,000 examples
+    #train_ex("cengine_model", inputs_2di, outputs_2di) # 10,000,000 examples
+    #train_ex("lowlevel_cengine_model", inputs_2di, outputs_2di) # 1,000,000 examples
+    #train_ex("pathetic_cengine_model", inputs_2di, outputs_2di) # 100,000 examples
+    make_new("lowlevel_cengine_model",  inputs_2di, outputs_2di)
 
     return
 

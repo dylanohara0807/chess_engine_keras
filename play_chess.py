@@ -6,10 +6,7 @@ import cengine
 import tensorflow as tf
 from tensorflow import keras
 
-"""
-"""
-
-def predict_pos(fen_s, model):
+def predict_pos(fen_s):
 
     board_li = [[0 for j in range(66)] for i in range(1)]
     m_c = fen_s[fen_s.index(" ") + 1 : fen_s.index(" ") + 2]
@@ -19,14 +16,50 @@ def predict_pos(fen_s, model):
 
     return model.predict(board_li, verbose = 0)
 
+def possible_new_states(state):
 
-"""
-"""
+    ret = []
+    for i in state.legal_moves:
+        state.push(i)
+        ret.append(state)
+        state.pop()
+
+    return ret
+
+def evaluate(state):
+
+    return predict_pos(state.fen())
+
+def minimax(state, depth, is_maximizing, alpha, beta):
+
+    if depth == 0:
+        return evaluate(state)
+
+    if is_maximizing:
+        bV = -30
+        for new_state in possible_new_states(state):
+            value = minimax(new_state, depth - 1, False, alpha, beta)
+            bV = max(bV, value) 
+            alpha = max(alpha, bV)
+            if beta <= alpha:
+                break
+        return bV
+
+    else:
+        bV = 30
+        for new_state in possible_new_states(state):
+            value = minimax(new_state, depth - 1, True, alpha, beta)
+            bV = min(bV, value) 
+            beta = min(beta, bV)
+            if beta <= alpha:
+                break
+        return bV
 
 def main():
 
     board = chess.Board()
-    model = keras.models.load_model(sys.argv[1])
+    global model
+    model = keras.models.load_model("model_data/" + sys.argv[1])
     topevals_lf = [[0 for j in range (2)] for i in range(4)]
     white_b = 1
 
@@ -34,12 +67,12 @@ def main():
 
         print(board)
         print("Top Moves: ", end = '')
-
+        
         count_i = 0
         for i in board.legal_moves:
 
             board.push(i)
-            eval_f = predict_pos(board.fen(), model)
+            eval_f = minimax(board, 3, True if white_b == 1 else False, -30, 30)
 
             if count_i < 4:
 
@@ -73,9 +106,11 @@ def main():
 
         for i in range(4):
             print(i+1, end = ""); print(". ", end = ""); print(topevals_lf[i][1], topevals_lf[i][0], " ", end = "")
+        
         move = input("\nEnter Move: ")
         if move == "quit": 
             break
+    
         board.push(chess.Move.from_uci(move))
         white_b = 0 if white_b == 1 else 1
 

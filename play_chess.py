@@ -3,7 +3,6 @@ import sys
 import chess
 import cengine
 
-import tensorflow as tf
 from tensorflow import keras
 
 def predict_pos(fen_s):
@@ -36,7 +35,11 @@ def minimax_ab(state, depth, is_maximizing, alpha, beta):
     if is_maximizing:
         bV = -30
         for new_state in possible_new_states(state):
-            value = minimax(new_state, depth - 1, False, alpha, beta)
+            if new_state.fen() in pos_eval:
+                value = pos_eval[new_state.fen()]
+            else:
+                value = minimax_ab(new_state, depth - 1, False, alpha, beta)
+                pos_eval[new_state.fen()] = value
             bV = max(bV, value) 
             alpha = max(alpha, bV)
             if beta <= alpha:
@@ -46,7 +49,11 @@ def minimax_ab(state, depth, is_maximizing, alpha, beta):
     else:
         bV = 30
         for new_state in possible_new_states(state):
-            value = minimax(new_state, depth - 1, True, alpha, beta)
+            if new_state.fen() in pos_eval:
+                value = pos_eval[new_state.fen()]
+            else:
+                value = minimax_ab(new_state, depth - 1, True, alpha, beta)
+                pos_eval[new_state.fen()] = value
             bV = min(bV, value) 
             beta = min(beta, bV)
             if beta <= alpha:
@@ -101,7 +108,8 @@ def main():
         for i in board.legal_moves:
 
             board.push(i)
-            eval_f = minimax(board, 3, white_b)
+            #eval_f = minimax(board, 3, white_b)
+            eval_f = minimax_ab(board, 1, white_b, -30, 30)
             topevals_lf.append([eval_f, i])
             board.pop()
         

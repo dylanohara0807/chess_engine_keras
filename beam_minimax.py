@@ -27,8 +27,7 @@ def possible_new_states(state):
 
     return ret
 
-bmove = None
-def minimax(state, depth, is_maximizing, alpha, beta):
+def beam_minimax(state, depth, is_maximizing, alpha, beta):
 
     if depth == 0:
         return predict_pos(state.fen())
@@ -39,8 +38,8 @@ def minimax(state, depth, is_maximizing, alpha, beta):
         for new_state in possible_new_states(state):
             q.append([predict_pos(state.fen()), new_state])
         q.sort(reverse=True, key = lambda x: x[0])
-        for i in range(min(5, len(q))):
-            value = minimax(q[i][1], depth - 1, False, alpha, beta)
+        for i in range(min(depth, len(q))):
+            value = beam_minimax(q[i][1], depth - 1, False, alpha, beta)
             bV = max(bV, value) 
             alpha = max(alpha, bV)
             if beta <= alpha:
@@ -53,8 +52,8 @@ def minimax(state, depth, is_maximizing, alpha, beta):
         for new_state in possible_new_states(state):
             q.append([predict_pos(state.fen()), new_state])
         q.sort(key = lambda x: x[0])
-        for i in range(min(5, len(q))):
-            value = minimax(q[i][1], depth - 1, True, alpha, beta)
+        for i in range(min(depth, len(q))):
+            value = beam_minimax(q[i][1], depth - 1, True, alpha, beta)
             bV = min(bV, value) 
             beta = min(beta, bV)
             if beta <= alpha:
@@ -64,9 +63,8 @@ def minimax(state, depth, is_maximizing, alpha, beta):
 def main():
 
     board = chess.Board()
-    global model
+    #global model
     global indepth
-    indepth = 5
     topevals_lf = []
     #model = keras.models.load_model("model_data/" + sys.argv[1])
     white_b = True
@@ -77,7 +75,7 @@ def main():
 
         for i in board.legal_moves:
             board.push(i)
-            eval_f = minimax(board, indepth, not white_b, -30, 30)
+            eval_f = beam_minimax(board, 6, not white_b, -30, 30)
             topevals_lf.append([eval_f, i])
             board.pop()
 

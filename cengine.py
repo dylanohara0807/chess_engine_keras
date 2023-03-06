@@ -1,5 +1,3 @@
-# Tensorflow
-import tensorflow as tf
 from tensorflow import keras
 from matplotlib import pyplot as plt
 import numpy as np
@@ -83,13 +81,19 @@ def make_new(file_file, inputs_2di, outputs_2di):
     keras.layers.Dense(256, activation='relu'),
     keras.layers.Dense(256, activation='relu'),
     keras.layers.Dense(256, activation='relu'),
-    keras.layers.Dense(256, activation='relu'),
+    keras.layers.Dense(64, activation='relu'),
     keras.layers.Dense(64, activation='relu'),
     keras.layers.Dense(1, activation='linear')
     ])
-    model.compile(optimizer='adam', loss='mean_squared_error')
+    
+    opt = keras.optimizers.experimental.AdamW(
+        learning_rate=0.001,
+        beta_1=0.9,
+        beta_2=0.999,
+        jit_compile=False,
+    )
+    model.compile(optimizer="adam", loss='mean_squared_error')
     model.fit(inputs_2di, outputs_2di, epochs=10, batch_size=5000) 
-
     model.save("model_data/" + file_file)
 
 def train_ex(file_file, inputs_2di, outputs_2di):
@@ -125,7 +129,7 @@ def main():
 
     """    
 
-    nex_i = 10000000
+    nex_i = 1000000
     inputs_2di = [[0 for j in range(66)] for i in range(nex_i)]
     outputs_2di = [[0 for j in range(1)] for i in range(nex_i)]
 
@@ -158,12 +162,11 @@ def main():
     inputs_2di = np.array(inputs_2di)
     outputs_2di = np.array(outputs_2di)
 
-    train_ex("exp_cengine_model", inputs_2di, outputs_2di) # 10,000,000 examples
+    #train_ex("exp_cengine_model", inputs_2di, outputs_2di) # 10,000,000 examples
     #train_ex("cengine_model", inputs_2di, outputs_2di) # 10,000,000 examples
     #train_ex("lowlevel_cengine_model", inputs_2di, outputs_2di) # 1,000,000 examples
-    #train_ex("pathetic_cengine_model", inputs_2di, outputs_2di) # 100,000 examples
 
-    #make_new("lowlevel_cengine_model",  inputs_2di, outputs_2di)
+    make_new("lowlevel_cengine_model",  inputs_2di, outputs_2di)
 
     return
 

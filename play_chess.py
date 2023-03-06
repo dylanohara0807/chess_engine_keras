@@ -13,8 +13,7 @@ def predict_pos(fen_s):
     board_li[0] = cengine.gen_board(fen_s)
     board_li[0][64] = -1 if m_c == "b" else 1
 
-    #return model.predict(board_li, verbose = 0)
-    return board_li[0][65]
+    return model.predict(board_li, verbose = 0) + board_li[0][65] / 2
 
 def possible_new_states(state):
 
@@ -27,19 +26,28 @@ def possible_new_states(state):
 
     return ret
 
-def minimax_ab(state, depth, is_maximizing, alpha, beta):
+global posmem
+posmem = {}
+def beam_minimax(state, depth, is_maximizing, alpha, beta):
 
     if depth == 0:
         return predict_pos(state.fen())
 
     if is_maximizing:
         bV = -30
+        q = []
         for new_state in possible_new_states(state):
-            if new_state.fen() in pos_eval:
-                value = pos_eval[new_state.fen()]
+            if new_state.fen() in posmem:
+                q.append([posmem[new_state.fen()], new_state])
             else:
-                value = minimax_ab(new_state, depth - 1, False, alpha, beta)
-                pos_eval[new_state.fen()] = value
+                q.append([predict_pos(state.fen()), new_state])
+        q.sort(reverse=True, key = lambda x: x[0])
+        for i in range(min(depth, len(q))):
+            if q[i][1].fen() in posmem:
+                value = q[i][0]
+            else:
+                value = beam_minimax(q[i][1], depth - 1, False, alpha, beta)
+                posmem[q[i][1].fen()] = value
             bV = max(bV, value) 
             alpha = max(alpha, bV)
             if beta <= alpha:
@@ -48,79 +56,52 @@ def minimax_ab(state, depth, is_maximizing, alpha, beta):
 
     else:
         bV = 30
+        q = []
         for new_state in possible_new_states(state):
-            if new_state.fen() in pos_eval:
-                value = pos_eval[new_state.fen()]
+            if new_state.fen() in posmem:
+                q.append([posmem[new_state.fen()], new_state])
             else:
-                value = minimax_ab(new_state, depth - 1, True, alpha, beta)
-                pos_eval[new_state.fen()] = value
+                q.append([predict_pos(state.fen()), new_state])
+        q.sort(key = lambda x: x[0])
+        for i in range(min(depth, len(q))):
+            if q[i][1].fen() in posmem:
+                value = q[i][0]
+            else:
+                value = beam_minimax(q[i][1], depth - 1, True, alpha, beta)
+                posmem[q[i][1].fen()] = value
             bV = min(bV, value) 
             beta = min(beta, bV)
             if beta <= alpha:
                 break
         return bV
 
-def minimax(state, depth, is_maximizing):
-
-    if depth == 0:
-        return predict_pos(state.fen())
-
-    if is_maximizing:
-        bV = -30
-        for new_state in possible_new_states(state):
-            if new_state.fen() in pos_eval:
-                value = pos_eval[new_state.fen()]
-            else:
-                value = minimax(new_state, depth - 1, False)
-                pos_eval[new_state.fen()] = value
-            bV = max(bV, value) 
-        return bV
-
-    else:
-        bV = 30
-        for new_state in possible_new_states(state):
-            if new_state.fen() in pos_eval:
-                value = pos_eval[new_state.fen()]
-            else:
-                value = minimax(new_state, depth - 1, True)
-                pos_eval[new_state.fen()] = value
-            bV = min(bV, value) 
-        return bV
-
 def main():
 
     board = chess.Board()
+    global posmem
     global model
-    global pos_eval
-    pos_eval = {}
     topevals_lf = []
     model = keras.models.load_model("model_data/" + sys.argv[1])
-    topevals_lf = [[0 for j in range (2)] for i in range(4)]
     white_b = True
 
     while (True):
 
-        print(board)
-        print("Top Moves: ", end = '')
         topevals_lf.clear()
-        pos_eval.clear()
 
+        posmem.clear()
         for i in board.legal_moves:
-
             board.push(i)
-            #eval_f = minimax(board, 3, white_b)
-            eval_f = minimax_ab(board, 1, white_b, -30, 30)
+            eval_f = beam_minimax(board, 7, not white_b, -30, 30)
             topevals_lf.append([eval_f, i])
             board.pop()
-        
-        print(len(topevals_lf), " | ", len(pos_eval))
-        topevals_lf.sort(reverse=True, key = lambda x: x[0]) if white_b else topevals_lf.sort(key = lambda x: x[0])
-        for i in range(min(4, len(topevals_lf))):
-            print(i+1, end = ""); print(". ", end = ""); print(topevals_lf[i][1], topevals_lf[i][0], " ", end = "")
 
+        topevals_lf.sort(reverse=True, key = lambda x: x[0]) if white_b else topevals_lf.sort(key = lambda x: x[0])
+        print(board)
+        print("Top Moves: ", end = '')
+        for i in range(min(4, len(topevals_lf))):
+            print(i+1, end = ""); print(". ", end = ""); print(topevals_lf[i][1], topevals_lf[i][0], end = " | ")
         move = input("\nEnter Move: ")
-        if move == "quit": 
-            break
+        if move == "quit": break
         board.push(chess.Move.from_uci(move))
         white_b = False if white_b else True
 

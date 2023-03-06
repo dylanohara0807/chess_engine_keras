@@ -27,6 +27,8 @@ def possible_new_states(state):
 
     return ret
 
+global posmem
+posmem = {}
 def beam_minimax(state, depth, is_maximizing, alpha, beta):
 
     if depth == 0:
@@ -36,10 +38,17 @@ def beam_minimax(state, depth, is_maximizing, alpha, beta):
         bV = -30
         q = []
         for new_state in possible_new_states(state):
-            q.append([predict_pos(state.fen()), new_state])
+            if new_state.fen() in posmem:
+                q.append([posmem[new_state.fen()], new_state])
+            else:
+                q.append([predict_pos(state.fen()), new_state])
         q.sort(reverse=True, key = lambda x: x[0])
         for i in range(min(depth, len(q))):
-            value = beam_minimax(q[i][1], depth - 1, False, alpha, beta)
+            if q[i][1].fen() in posmem:
+                value = q[i][0]
+            else:
+                value = beam_minimax(q[i][1], depth - 1, False, alpha, beta)
+                posmem[q[i][1].fen()] = value
             bV = max(bV, value) 
             alpha = max(alpha, bV)
             if beta <= alpha:
@@ -50,10 +59,17 @@ def beam_minimax(state, depth, is_maximizing, alpha, beta):
         bV = 30
         q = []
         for new_state in possible_new_states(state):
-            q.append([predict_pos(state.fen()), new_state])
+            if new_state.fen() in posmem:
+                q.append([posmem[new_state.fen()], new_state])
+            else:
+                q.append([predict_pos(state.fen()), new_state])
         q.sort(key = lambda x: x[0])
         for i in range(min(depth, len(q))):
-            value = beam_minimax(q[i][1], depth - 1, True, alpha, beta)
+            if q[i][1].fen() in posmem:
+                value = q[i][0]
+            else:
+                value = beam_minimax(q[i][1], depth - 1, True, alpha, beta)
+                posmem[q[i][1].fen()] = value
             bV = min(bV, value) 
             beta = min(beta, bV)
             if beta <= alpha:
@@ -63,8 +79,8 @@ def beam_minimax(state, depth, is_maximizing, alpha, beta):
 def main():
 
     board = chess.Board()
+    global posmem
     #global model
-    global indepth
     topevals_lf = []
     #model = keras.models.load_model("model_data/" + sys.argv[1])
     white_b = True
@@ -73,9 +89,10 @@ def main():
 
         topevals_lf.clear()
 
+        posmem.clear()
         for i in board.legal_moves:
             board.push(i)
-            eval_f = beam_minimax(board, 6, not white_b, -30, 30)
+            eval_f = beam_minimax(board, 7, not white_b, -30, 30)
             topevals_lf.append([eval_f, i])
             board.pop()
 
@@ -86,7 +103,13 @@ def main():
             print(i+1, end = ""); print(". ", end = ""); print(topevals_lf[i][1], topevals_lf[i][0], end = " | ")
         move = input("\nEnter Move: ")
         if move == "quit": break
-        board.push(chess.Move.from_uci(move))
+        while True:
+            try:
+                board.push(chess.Move.from_uci(move))
+                break
+            except Exception:
+                print("Invalid move.")
+
         white_b = False if white_b else True
 
 

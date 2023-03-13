@@ -129,9 +129,6 @@ dmypy.json
 .pyre/
 
 # Personal gitignore
-cengine_model
-data
-lowlevel_cengine_model
-pathetic_cengine_model
-ex.py
+model_data
+training_data
 chess_train.csv

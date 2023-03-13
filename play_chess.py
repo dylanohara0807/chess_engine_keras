@@ -13,7 +13,8 @@ def predict_pos(fen_s):
     board_li[0] = cengine.gen_board(fen_s)
     board_li[0][64] = -1 if m_c == "b" else 1
 
-    return model.predict(board_li, verbose = 0) + board_li[0][65] / 2
+    #return board_li[0][65] 
+    return model.predict(board_li, verbose = 0) + board_li[0][65] / 3
 
 def possible_new_states(state):
 
@@ -26,7 +27,6 @@ def possible_new_states(state):
 
     return ret
 
-global posmem
 posmem = {}
 def beam_minimax(state, depth, is_maximizing, alpha, beta):
 
@@ -91,7 +91,7 @@ def main():
         posmem.clear()
         for i in board.legal_moves:
             board.push(i)
-            eval_f = beam_minimax(board, 7, not white_b, -30, 30)
+            eval_f = beam_minimax(board, 5, not white_b, -30, 30)
             topevals_lf.append([eval_f, i])
             board.pop()
 
@@ -104,7 +104,6 @@ def main():
         if move == "quit": break
         board.push(chess.Move.from_uci(move))
         white_b = False if white_b else True
-
 
 if __name__ == "__main__":
     main()

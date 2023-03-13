@@ -73,27 +73,21 @@ def make_new(file_file, inputs_2di, outputs_2di):
     """    
 
     model = keras.Sequential([
-    keras.layers.Dense(4096, activation='relu', input_shape=[66]),
-    keras.layers.Dense(1024, activation='relu'),
-    keras.layers.Dense(256, activation='relu'),
-    keras.layers.Dense(256, activation='relu'),
-    keras.layers.Dense(256, activation='relu'),
-    keras.layers.Dense(256, activation='relu'),
-    keras.layers.Dense(256, activation='relu'),
-    keras.layers.Dense(256, activation='relu'),
-    keras.layers.Dense(64, activation='relu'),
-    keras.layers.Dense(64, activation='relu'),
+    keras.layers.Dense(4096, activation='tanh', input_shape=[66]),
+    keras.layers.Dense(1024, activation='tanh'),
+    keras.layers.Dense(256, activation='tanh'),
+    keras.layers.Dense(256, activation='tanh'),
+    keras.layers.Dense(256, activation='tanh'),
+    keras.layers.Dense(256, activation='tanh'),
+    keras.layers.Dense(256, activation='tanh'),
+    keras.layers.Dense(256, activation='tanh'),
+    keras.layers.Dense(64, activation='tanh'),
+    keras.layers.Dense(64, activation='tanh'),
     keras.layers.Dense(1, activation='linear')
     ])
-    
-    opt = keras.optimizers.experimental.AdamW(
-        learning_rate=0.001,
-        beta_1=0.9,
-        beta_2=0.999,
-        jit_compile=False,
-    )
-    model.compile(optimizer="adam", loss='mean_squared_error')
-    model.fit(inputs_2di, outputs_2di, epochs=10, batch_size=5000) 
+
+    model.compile(optimizer="Nadam", loss='mean_squared_error')
+    model.fit(inputs_2di, outputs_2di, epochs=10, batch_size=1000) 
     model.save("model_data/" + file_file)
 
 def train_ex(file_file, inputs_2di, outputs_2di):
@@ -108,7 +102,7 @@ def train_ex(file_file, inputs_2di, outputs_2di):
     """     
 
     model = keras.models.load_model("model_data/" + file_file)
-    history =  model.fit(inputs_2di, outputs_2di, epochs=30, batch_size = 10000, validation_split = .1) 
+    history =  model.fit(inputs_2di, outputs_2di, epochs=10, batch_size = 1000, validation_split = .1) 
 
     plt.plot(history.history['loss'])
     plt.plot(history.history['val_loss'])
@@ -129,7 +123,7 @@ def main():
 
     """    
 
-    nex_i = 1000000
+    nex_i = 10000000
     inputs_2di = [[0 for j in range(66)] for i in range(nex_i)]
     outputs_2di = [[0 for j in range(1)] for i in range(nex_i)]
 
@@ -162,11 +156,11 @@ def main():
     inputs_2di = np.array(inputs_2di)
     outputs_2di = np.array(outputs_2di)
 
-    #train_ex("exp_cengine_model", inputs_2di, outputs_2di) # 10,000,000 examples
-    #train_ex("cengine_model", inputs_2di, outputs_2di) # 10,000,000 examples
-    #train_ex("lowlevel_cengine_model", inputs_2di, outputs_2di) # 1,000,000 examples
+    #train_ex("exp_cengine_model", inputs_2di, outputs_2di)
+    #train_ex("cengine_model", inputs_2di, outputs_2di)
+    #train_ex("lowlevel_cengine_model", inputs_2di, outputs_2di)
 
-    make_new("lowlevel_cengine_model",  inputs_2di, outputs_2di)
+    make_new("lowlevel_cengine_model", inputs_2di, outputs_2di)
 
     return
 

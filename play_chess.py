@@ -2,6 +2,8 @@ import sys
 
 import chess
 import cengine
+import numpy as np
+import copy
 
 from tensorflow import keras
 
@@ -13,22 +15,23 @@ def predict_pos(fen_s):
     board_li[0] = cengine.gen_board(fen_s)
     board_li[0][64] = -1 if m_c == "b" else 1
 
-    #return board_li[0][65] 
-    return model.predict(board_li, verbose = 0) + board_li[0][65] / 3
+    board_li = np.array(board_li)
+    return board_li[0][65] 
+    #return model.predict(board_li, verbose = 0) + board_li[0][65] / 3
 
 def possible_new_states(state):
 
     ret = []
-    count = 0
     for i in state.legal_moves:
         state.push(i)
-        ret.append(state.copy())
+        t = copy.deepcopy(state)
+        ret.append(t)
         state.pop()
 
     return ret
 
-posmem = {}
 def beam_minimax(state, depth, is_maximizing, alpha, beta):
+    global posmem
 
     if depth == 0:
         return predict_pos(state.fen())
@@ -40,7 +43,8 @@ def beam_minimax(state, depth, is_maximizing, alpha, beta):
             if new_state.fen() in posmem:
                 q.append([posmem[new_state.fen()], new_state])
             else:
-                q.append([predict_pos(state.fen()), new_state])
+                q.append([predict_pos(new_state.fen()), new_state])
+
         q.sort(reverse=True, key = lambda x: x[0])
         for i in range(min(depth, len(q))):
             if q[i][1].fen() in posmem:
@@ -61,7 +65,7 @@ def beam_minimax(state, depth, is_maximizing, alpha, beta):
             if new_state.fen() in posmem:
                 q.append([posmem[new_state.fen()], new_state])
             else:
-                q.append([predict_pos(state.fen()), new_state])
+                q.append([predict_pos(new_state.fen()), new_state])
         q.sort(key = lambda x: x[0])
         for i in range(min(depth, len(q))):
             if q[i][1].fen() in posmem:
@@ -79,6 +83,7 @@ def main():
 
     board = chess.Board()
     global posmem
+    posmem = {}
     global model
     topevals_lf = []
     model = keras.models.load_model("model_data/" + sys.argv[1])
@@ -91,7 +96,7 @@ def main():
         posmem.clear()
         for i in board.legal_moves:
             board.push(i)
-            eval_f = beam_minimax(board, 5, not white_b, -30, 30)
+            eval_f = beam_minimax(board, 7, not white_b, -30, 30)
             topevals_lf.append([eval_f, i])
             board.pop()
 
@@ -100,9 +105,14 @@ def main():
         print("Top Moves: ", end = '')
         for i in range(min(4, len(topevals_lf))):
             print(i+1, end = ""); print(". ", end = ""); print(topevals_lf[i][1], topevals_lf[i][0], end = " | ")
-        move = input("\nEnter Move: ")
-        if move == "quit": break
-        board.push(chess.Move.from_uci(move))
+        while True:
+            try:
+                move = input("\nEnter Move: ")
+                if move == "quit": exit()
+                board.push(chess.Move.from_uci(move))
+                break
+            except Exception:
+                print("Invalid move.",end="")
         white_b = False if white_b else True
 
 if __name__ == "__main__":

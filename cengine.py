@@ -86,7 +86,7 @@ def make_new(file_file, inputs_2di, outputs_2di):
     keras.layers.Dense(1, activation='linear')
     ])
 
-    model.compile(optimizer="Nadam", loss='mean_squared_error')
+    model.compile(optimizer="Adam", loss='mean_squared_error')
     model.fit(inputs_2di, outputs_2di, epochs=10, batch_size=1000) 
     model.save("model_data/" + file_file)
 
@@ -156,11 +156,8 @@ def main():
     inputs_2di = np.array(inputs_2di)
     outputs_2di = np.array(outputs_2di)
 
-    #train_ex("exp_cengine_model", inputs_2di, outputs_2di)
-    #train_ex("cengine_model", inputs_2di, outputs_2di)
-    #train_ex("lowlevel_cengine_model", inputs_2di, outputs_2di)
-
-    make_new("lowlevel_cengine_model", inputs_2di, outputs_2di)
+    train_ex("adam_tanh_cengine", inputs_2di, outputs_2di)
+    #make_new("adam_tanh_cengine", inputs_2di, outputs_2di)
 
     return
 

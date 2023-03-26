@@ -1,10 +1,8 @@
 import sys
-
+import time
 import chess
 import cengine
 import numpy as np
-import copy
-
 from tensorflow import keras
 
 def predict_pos(fen_s):
@@ -15,8 +13,6 @@ def predict_pos(fen_s):
     board_li[0] = cengine.gen_board(fen_s)
     board_li[0][64] = -1 if m_c == "b" else 1
 
-    board_li = np.array(board_li)
-    #return board_li[0][65] 
     return model.predict(board_li, verbose = 0) #+ board_li[0][65] / 3
 
 def possible_new_states(state):
@@ -24,14 +20,12 @@ def possible_new_states(state):
     ret = []
     for i in state.legal_moves:
         state.push(i)
-        t = copy.deepcopy(state)
-        ret.append(t)
+        ret.append(state.copy())
         state.pop()
 
     return ret
 
 def beam_minimax(state, depth, is_maximizing, alpha, beta):
-    global posmem
 
     if depth == 0:
         return predict_pos(state.fen())
@@ -82,9 +76,8 @@ def beam_minimax(state, depth, is_maximizing, alpha, beta):
 def main():
 
     board = chess.Board()
-    global posmem
+    global posmem; global model
     posmem = {}
-    global model
     topevals_lf = []
     model = keras.models.load_model("model_data/" + sys.argv[1])
     white_b = True
@@ -92,13 +85,15 @@ def main():
     while (True):
 
         topevals_lf.clear()
-
         posmem.clear()
+
+        t = time.perf_counter()
         for i in board.legal_moves:
             board.push(i)
-            eval_f = beam_minimax(board, 4, not white_b, -30, 30)
+            eval_f = beam_minimax(board, 7, not white_b, -30, 30)
             topevals_lf.append([eval_f, i])
             board.pop()
+        print("Time Alloted:", time.perf_counter() - t)
 
         topevals_lf.sort(reverse=True, key = lambda x: x[0]) if white_b else topevals_lf.sort(key = lambda x: x[0])
         print(board)

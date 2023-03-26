@@ -1,25 +1,16 @@
-import sys
-
 import chess
 import cengine
-
-from tensorflow import keras
+import time
 
 def predict_pos(fen_s):
 
-    board_li = [[0 for j in range(66)] for i in range(1)]
     m_c = fen_s[fen_s.index(" ") + 1 : fen_s.index(" ") + 2]
     fen_s = fen_s[0 : fen_s.index(" ")]
-    board_li[0] = cengine.gen_board(fen_s)
-    board_li[0][64] = -1 if m_c == "b" else 1
-
-    #return model.predict(board_li, verbose = 0)
-    return board_li[0][65]
+    return cengine.gen_board(fen_s)[65]
 
 def possible_new_states(state):
 
     ret = []
-    count = 0
     for i in state.legal_moves:
         state.push(i)
         ret.append(state.copy())
@@ -27,9 +18,8 @@ def possible_new_states(state):
 
     return ret
 
-global posmem
-posmem = {}
 def beam_minimax(state, depth, is_maximizing, alpha, beta):
+    global posmem
 
     if depth == 0:
         return predict_pos(state.fen())
@@ -80,35 +70,37 @@ def main():
 
     board = chess.Board()
     global posmem
-    #global model
+    posmem = {}
     topevals_lf = []
-    #model = keras.models.load_model("model_data/" + sys.argv[1])
     white_b = True
 
     while (True):
 
         topevals_lf.clear()
-
         posmem.clear()
+
+        t = time.perf_counter()
         for i in board.legal_moves:
             board.push(i)
-            eval_f = beam_minimax(board, 2, not white_b, -30, 30)
+            eval_f = beam_minimax(board, 7, not white_b, -30, 30)
             topevals_lf.append([eval_f, i])
             board.pop()
+        print("Time Alloted:", time.perf_counter() - t)
 
         topevals_lf.sort(reverse=True, key = lambda x: x[0]) if white_b else topevals_lf.sort(key = lambda x: x[0])
         print(board)
         print("Top Moves: ", end = '')
         for i in range(min(4, len(topevals_lf))):
             print(i+1, end = ""); print(". ", end = ""); print(topevals_lf[i][1], topevals_lf[i][0], end = " | ")
-        move = input("\nEnter Move: ")
-        if move == "quit": break
+
         while True:
             try:
+                move = input("\nEnter Move: ")
+                if move == "quit": exit()
                 board.push(chess.Move.from_uci(move))
                 break
             except Exception:
-                print("Invalid move.")
+                print("Invalid move.",end="")
 
         white_b = False if white_b else True
 

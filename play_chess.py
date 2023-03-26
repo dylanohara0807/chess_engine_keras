@@ -16,8 +16,8 @@ def predict_pos(fen_s):
     board_li[0][64] = -1 if m_c == "b" else 1
 
     board_li = np.array(board_li)
-    return board_li[0][65] 
-    #return model.predict(board_li, verbose = 0) + board_li[0][65] / 3
+    #return board_li[0][65] 
+    return model.predict(board_li, verbose = 0) #+ board_li[0][65] / 3
 
 def possible_new_states(state):
 
@@ -96,7 +96,7 @@ def main():
         posmem.clear()
         for i in board.legal_moves:
             board.push(i)
-            eval_f = beam_minimax(board, 7, not white_b, -30, 30)
+            eval_f = beam_minimax(board, 4, not white_b, -30, 30)
             topevals_lf.append([eval_f, i])
             board.pop()
 

@@ -1,4 +1,5 @@
 from tensorflow import keras
+from keras import backend as K
 from matplotlib import pyplot as plt
 import numpy as np
 
@@ -70,19 +71,22 @@ def make_new(file_file, inputs_2di, outputs_2di):
         file_file (str): File name to save traind model to.
         inputs_2di (float[][66]): 2D array of the inputs.
         outputs_2di (float[][1]): 2D array of outputs (one output value).
-    """    
+    """
+    def stretched_tanh(x):
+        return (K.tanh(x / 5) * 5)
 
     model = keras.Sequential([
-    keras.layers.Dense(4096, activation='tanh', input_shape=[66]),
-    keras.layers.Dense(1024, activation='tanh'),
-    keras.layers.Dense(256, activation='tanh'),
-    keras.layers.Dense(256, activation='tanh'),
-    keras.layers.Dense(256, activation='tanh'),
-    keras.layers.Dense(256, activation='tanh'),
-    keras.layers.Dense(256, activation='tanh'),
-    keras.layers.Dense(256, activation='tanh'),
-    keras.layers.Dense(64, activation='tanh'),
-    keras.layers.Dense(64, activation='tanh'),
+    keras.layers.Dense(4096, activation=stretched_tanh, input_shape=[66]),
+    keras.layers.Dense(1024, activation=stretched_tanh),
+    keras.layers.Dense(256, activation=stretched_tanh),
+    keras.layers.Dense(256, activation=stretched_tanh),
+    keras.layers.Dense(256, activation=stretched_tanh),
+    keras.layers.Dense(256, activation=stretched_tanh),
+    keras.layers.Dense(256, activation=stretched_tanh),
+    keras.layers.Dense(256, activation=stretched_tanh),
+    ###
+    keras.layers.Dense(64, activation=stretched_tanh),
+    keras.layers.Dense(64, activation=stretched_tanh),
     keras.layers.Dense(1, activation='linear')
     ])
 
@@ -156,8 +160,8 @@ def main():
     inputs_2di = np.array(inputs_2di)
     outputs_2di = np.array(outputs_2di)
 
-    train_ex("adam_tanh_cengine", inputs_2di, outputs_2di)
-    #make_new("adam_tanh_cengine", inputs_2di, outputs_2di)
+    #train_ex("adam_stretchedtanh", inputs_2di, outputs_2di)
+    make_new("adam_stretchedtanh", inputs_2di, outputs_2di)
 
     return
 

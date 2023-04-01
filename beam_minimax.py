@@ -4,7 +4,6 @@ import time
 
 def predict_pos(fen_s):
 
-    m_c = fen_s[fen_s.index(" ") + 1 : fen_s.index(" ") + 2]
     fen_s = fen_s[0 : fen_s.index(" ")]
     return cengine.gen_board(fen_s)[65]
 
@@ -31,7 +30,7 @@ def beam_minimax(state, depth, is_maximizing, alpha, beta):
             if new_state.fen() in posmem:
                 q.append([posmem[new_state.fen()], new_state])
             else:
-                q.append([predict_pos(state.fen()), new_state])
+                q.append([predict_pos(new_state.fen()), new_state])
         q.sort(reverse=True, key = lambda x: x[0])
         for i in range(min(depth, len(q))):
             if q[i][1].fen() in posmem:
@@ -52,7 +51,7 @@ def beam_minimax(state, depth, is_maximizing, alpha, beta):
             if new_state.fen() in posmem:
                 q.append([posmem[new_state.fen()], new_state])
             else:
-                q.append([predict_pos(state.fen()), new_state])
+                q.append([predict_pos(new_state.fen()), new_state])
         q.sort(key = lambda x: x[0])
         for i in range(min(depth, len(q))):
             if q[i][1].fen() in posmem:

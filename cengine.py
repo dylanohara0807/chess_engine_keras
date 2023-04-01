@@ -60,24 +60,24 @@ def make_new(file_file, inputs_2di, outputs_2di):
         outputs_2di (float[][1]): 2D array of outputs (one output value).
     """
     def stretched_tanh(x):
-        return (K.tanh(x / 5) * 5)
+        return K.tanh(x / 3) * 3
 
     model = keras.Sequential([
-    keras.layers.Dense(4096, activation=stretched_tanh, input_shape=[66]),
-    keras.layers.Dense(1024, activation=stretched_tanh),
-    keras.layers.Dense(256, activation=stretched_tanh),
-    keras.layers.Dense(256, activation=stretched_tanh),
-    keras.layers.Dense(256, activation=stretched_tanh),
-    keras.layers.Dense(256, activation=stretched_tanh),
-    keras.layers.Dense(256, activation=stretched_tanh),
-    keras.layers.Dense(256, activation=stretched_tanh),
+    keras.layers.Dense(4096, activation="relu", input_shape=[66]),
+    keras.layers.Dense(1024, activation="relu"),
+    keras.layers.Dense(256, activation="relu"),
+    keras.layers.Dense(256, activation="relu"),
+    keras.layers.Dense(256, activation="relu"),
+    keras.layers.Dense(256, activation="relu"),
+    keras.layers.Dense(256, activation="relu"),
+    keras.layers.Dense(256, activation="relu"),
     ###
-    keras.layers.Dense(64, activation=stretched_tanh),
-    keras.layers.Dense(64, activation=stretched_tanh),
-    keras.layers.Dense(1, activation='linear')
+    keras.layers.Dense(64, activation="relu"),
+    keras.layers.Dense(16, activation="relu"),
+    keras.layers.Dense(1, activation=stretched_tanh)
     ])
 
-    model.compile(optimizer="Adam", loss='mean_squared_error')
+    model.compile(optimizer="Nadam", loss='mean_squared_error')
     model.fit(inputs_2di, outputs_2di, epochs=10, batch_size=1000) 
     model.save("model_data/" + file_file)
 
@@ -92,8 +92,18 @@ def train_ex(file_file, inputs_2di, outputs_2di):
         outputs_2di (float[][1]): 2D array of outputs (one output value).
     """     
 
+    early_stopping_monitor = keras.callbacks.EarlyStopping(
+        monitor='val_loss',
+        min_delta=0,
+        patience=0,
+        verbose=1,
+        mode='auto',
+        baseline=None,
+        restore_best_weights=True
+    )
     model = keras.models.load_model("model_data/" + file_file)
-    history =  model.fit(inputs_2di, outputs_2di, epochs=10, batch_size = 1000, validation_split = .1) 
+    history =  model.fit(inputs_2di, outputs_2di, epochs=10, batch_size = 1000, 
+                         validation_split = .1, callbacks=[early_stopping_monitor]) 
 
     plt.plot(history.history['loss'])
     plt.plot(history.history['val_loss'])
@@ -115,6 +125,8 @@ def main():
     """    
 
     def load_file():
+
+        nex_i = 12900000
 
         inputs_2di = [[0 for j in range(66)] for i in range(nex_i)]
         outputs_2di = [[0 for j in range(1)] for i in range(nex_i)]
@@ -145,14 +157,33 @@ def main():
         np.save("training_data/inputs_board", inputs_2di)
         np.save("training_data/outputs_eval", outputs_2di)
 
-    nex_i = 12900000
-    #model = keras.models.load_model(sys.argv[1])
+    #model = keras.models.load_model("model_data/" + sys.argv[1])
     
     inputs_2di = np.load("training_data/inputs_board.npy")
     outputs_2di = np.load("training_data/outputs_eval.npy")
+    tempin = []; tempout = []
 
-    #train_ex("adam_stretchedtanh", inputs_2di, outputs_2di)
-    #make_new("adam_stretchedtanh", inputs_2di, outputs_2di)
+    w = 0
+    for pos, v in enumerate(outputs_2di):
+        if v >= 0: 
+            w += 1
+            if w < 4776568:
+                tempin.append(inputs_2di[pos])
+                tempout.append(K.tanh(outputs_2di[pos]/3))
+        else:
+            tempin.append(inputs_2di[pos])
+            tempout.append(K.tanh(outputs_2di[pos]/3) * 3)
+    tempin = np.array(tempin); tempout = np.array(tempout)
+
+    """
+    for i in range(1000):
+        if outputs_2di[i] < 0:
+            print(model.predict(np.array([inputs_2di[i]]), verbose  = 0), end = " | ")
+            print("Output:", outputs_2di[i])
+    """
+
+    #train_ex("adam_relu", inputs_2di, outputs_2di)
+    make_new("adamw_relu", tempin, tempout)
 
     return
 

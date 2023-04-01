@@ -1,9 +1,32 @@
 # Validation Loss versus Training Loss
 
-...
-
-# Material Balance (Feature Engineering)
+Chess is a massively complex game, so ther ability for the network to generalize
+evaluations to new positions is not very good, especially without a skewed input
+generalizer such as material value. If we do want to achieve better validation loss
+after training the first step should be ot feature engineer better indicators of position.
+That being said, the model does tend to do better when the validation sets are significantly
+large, i.e it is given the chance to apply learned paramters over a more even distribution
+of positions. Currently, I have my ambitions set on creating a custom layer sequence
+that will take input and different levels to emphasize important features, as well as modify
+features to contain more information themselevs, e.g making pieces closer to the center of the
+board higher valued.
 
 ...
 
 # Activation Functions
+
+I tried using a tanh and stretched tanh function in order to make it easier for the 
+network to distinguish between positive and negative evaluations, however the network
+performs much better with ReLu activiations, like many others. This is due to the non-zero
+nature of chess. Rarely do we see times when there are a significant zero-values on the
+board, which causes the network to propagate non-zero activations which makes it hard for the
+network to establish seperate patterns. I haven't looked at gradient calculations, but given
+it is a fairly deep network in use, that could also be an issue.
+
+# Example Evaluation Bias
+
+After some analysis, it is clear that the model will over-predict positive evaluations
+due to there being twice the amount of positive than negative evaluations. Truncating the
+dataset helps to improve the training noticeably. Although chess is a zero sum game, because
+it is so complex, the network may begin to look for optimal loss simply by migrating to the
+more popular evaluations which is not the desired effect.

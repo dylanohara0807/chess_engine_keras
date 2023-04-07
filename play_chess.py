@@ -90,7 +90,7 @@ def main():
         t = time.perf_counter()
         for i in board.legal_moves:
             board.push(i)
-            eval_f = beam_minimax(board, 7, not white_b, -30, 30)
+            eval_f = beam_minimax(board, 4, not white_b, -30, 30)
             topevals_lf.append([eval_f, i])
             board.pop()
         print("Time Alloted:", time.perf_counter() - t)

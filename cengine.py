@@ -95,7 +95,7 @@ def train_ex(file_file, inputs_2di, outputs_2di):
     early_stopping_monitor = keras.callbacks.EarlyStopping(
         monitor='val_loss',
         min_delta=0,
-        patience=0,
+        patience=3,
         verbose=1,
         mode='auto',
         baseline=None,
@@ -161,9 +161,9 @@ def main():
     
     inputs_2di = np.load("training_data/inputs_board.npy")
     outputs_2di = np.load("training_data/outputs_eval.npy")
-    tempin = []; tempout = []
 
-    w = 0
+    #"""
+    tempin = []; tempout = []; w = 0
     for pos, v in enumerate(outputs_2di):
         if v >= 0: 
             w += 1
@@ -174,16 +174,16 @@ def main():
             tempin.append(inputs_2di[pos])
             tempout.append(K.tanh(outputs_2di[pos]/3) * 3)
     tempin = np.array(tempin); tempout = np.array(tempout)
+    #"""
 
     """
     for i in range(1000):
-        if outputs_2di[i] < 0:
-            print(model.predict(np.array([inputs_2di[i]]), verbose  = 0), end = " | ")
-            print("Output:", outputs_2di[i])
+        print(model.predict(np.array([inputs_2di[i]]), verbose  = 0), end = " | ")
+        print("Output:", K.tanh(outputs_2di[i] / 3) * 3)
     """
 
-    #train_ex("adam_relu", inputs_2di, outputs_2di)
-    make_new("adamw_relu", tempin, tempout)
+    train_ex("adamw_relu", tempin, tempout)
+    #make_new("adamw_relu", tempin, tempout)
 
     return
 

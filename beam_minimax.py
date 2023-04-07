@@ -24,7 +24,7 @@ def beam_minimax(state, depth, is_maximizing, alpha, beta):
         return predict_pos(state.fen())
 
     if is_maximizing:
-        bV = -30
+        bV = -100
         q = []
         for new_state in possible_new_states(state):
             if new_state.fen() in posmem:
@@ -45,7 +45,7 @@ def beam_minimax(state, depth, is_maximizing, alpha, beta):
         return bV
 
     else:
-        bV = 30
+        bV = 100
         q = []
         for new_state in possible_new_states(state):
             if new_state.fen() in posmem:
@@ -81,7 +81,7 @@ def main():
         t = time.perf_counter()
         for i in board.legal_moves:
             board.push(i)
-            eval_f = beam_minimax(board, 7, not white_b, -30, 30)
+            eval_f = beam_minimax(board, 7, not white_b, -100, 100)
             topevals_lf.append([eval_f, i])
             board.pop()
         print("Time Alloted:", time.perf_counter() - t)

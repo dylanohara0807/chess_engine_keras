@@ -129,6 +129,4 @@ dmypy.json
 .pyre/
 
 # Personal gitignore
-model_data
 training_data
-chess_train.csv

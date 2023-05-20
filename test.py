@@ -2,7 +2,6 @@ import sys
 import time
 import chess
 import cengine
-import numpy as np
 from tensorflow import keras
 from multiprocessing import Pool
 
@@ -42,7 +41,7 @@ def beam_minimax(pack):
 
     alpha = pack.alpha; beta = pack.beta; is_maximizing = pack.ismax; depth = pack.depth; state = pack.state
 
-    if pack.depth == 0:
+    if depth == 0:
         return predict_pos(pack.state.fen())
     
     if is_maximizing:

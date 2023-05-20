@@ -59,8 +59,13 @@ def make_new(file_file, inputs_2di, outputs_2di):
         inputs_2di (float[][66]): 2D array of the inputs.
         outputs_2di (float[][1]): 2D array of outputs (one output value).
     """
-    def stretched_tanh(x):
-        return K.tanh(x / 3) * 3
+    
+    def pers(x):
+
+        x /= 2
+        l = (x + 3) / 2 - abs((3 - ((x + 3) / 2)))
+        r = (l - 3) / 2 + abs((-3 - ((l - 3) / 2)))
+        return r
 
     model = keras.Sequential([
     keras.layers.Dense(4096, activation="relu", input_shape=[66]),
@@ -74,7 +79,7 @@ def make_new(file_file, inputs_2di, outputs_2di):
     ###
     keras.layers.Dense(64, activation="relu"),
     keras.layers.Dense(16, activation="relu"),
-    keras.layers.Dense(1, activation=stretched_tanh)
+    keras.layers.Dense(1, activation=pers)
     ])
 
     model.compile(optimizer="Nadam", loss='mean_squared_error')
@@ -169,10 +174,10 @@ def main():
             w += 1
             if w < 4776568:
                 tempin.append(inputs_2di[pos])
-                tempout.append(K.tanh(outputs_2di[pos]/3))
+                tempout.append(max(-3, min(3, outputs_2di[pos] / 2)))
         else:
             tempin.append(inputs_2di[pos])
-            tempout.append(K.tanh(outputs_2di[pos]/3) * 3)
+            tempout.append(max(-3, min(3, outputs_2di[pos] / 2)))
     tempin = np.array(tempin); tempout = np.array(tempout)
     #"""
 
@@ -182,8 +187,8 @@ def main():
         print("Output:", K.tanh(outputs_2di[i] / 3) * 3)
     """
 
-    train_ex("adamw_relu", tempin, tempout)
-    #make_new("adamw_relu", tempin, tempout)
+    #train_ex("adamw_relu", tempin, tempout)
+    make_new("nadam_minmaxthree", tempin, tempout)
 
     return
 
